@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>计划表 App · UI 设计提案</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#171b22;color:#e7eaf0;font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;padding:24px 18px 50px}
+h1{font-size:20px}
+.sub{color:#8b93a3;font-size:12px;margin-top:6px}
+.stack{display:flex;flex-wrap:wrap;gap:22px 20px;margin-top:22px;align-items:flex-start}
+.cell{width:298px}
+.cap{font-size:12.5px;color:#c6ccd8;text-align:center;margin-bottom:8px}
+.cap b{color:#fff}
+.frame{width:290px;height:610px;border-radius:30px;border:6px solid #05060a;box-shadow:0 14px 34px rgba(0,0,0,.5);overflow:hidden;position:relative;display:flex;flex-direction:column;background:var(--bg);color:var(--tx)}
+.light{--bg:#f5f6fa;--tx:#1f2430;--sub:#9aa1b0;--card:#fff;--line:#eceef3;--ac:#3b82f6;--soft:#e8efff}
+.dark{--bg:#12151b;--tx:#e7eaf0;--sub:#7b8494;--card:#1b2029;--line:#262c37;--ac:#5b9dff;--soft:#1d2736}
+.sbar{height:28px;display:flex;justify-content:space-between;align-items:center;padding:0 16px;font-size:11px;font-weight:600;color:var(--sub)}
+.hd{display:flex;justify-content:space-between;align-items:center;padding:8px 16px 4px}
+.hdate{font-size:19px;font-weight:800}
+.hsub{font-size:11px;color:var(--sub);margin-top:3px}
+.hava{width:30px;height:30px;border-radius:50%;background:var(--soft);color:var(--ac);display:flex;align-items:center;justify-content:center;font-size:14px}
+.pwrap{padding:7px 16px 0}
+.pbar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.pfill{height:100%;border-radius:3px;background:var(--ac)}
+.psub{font-size:10px;color:var(--sub);margin-top:4px}
+.sec{font-size:11px;color:var(--sub);padding:10px 16px 5px;font-weight:700}
+.task{display:flex;align-items:center;gap:9px;margin:0 16px 7px;background:var(--card);border-radius:11px;padding:10px 11px;box-shadow:0 1px 2px rgba(10,15,30,.05)}
+.ck{width:18px;height:18px;border-radius:50%;border:2px solid #c9cedb;flex:none}
+.ck.on{background:var(--ac);border-color:var(--ac);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center}
+.tt{flex:1;min-width:0}
+.tt b{font-size:13px;display:block}
+.tt i{font-style:normal;font-size:10px;color:var(--sub);margin-top:2px;display:block}
+.done .tt b{text-decoration:line-through;color:var(--sub);font-weight:500}
+.tag{font-size:9px;padding:2px 6px;border-radius:99px;background:#fee2e2;color:#ef4444;font-weight:700;flex:none}
+.fab{position:absolute;right:14px;bottom:60px;width:44px;height:44px;border-radius:50%;background:var(--ac);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 16px rgba(59,130,246,.45)}
+.nav{position:absolute;left:0;right:0;bottom:0;height:48px;background:var(--card);border-top:1px solid var(--line);display:flex}
+.nav span{flex:1;display:flex;align-items:center;justify-content:center;font-size:10.5px;color:var(--sub)}
+.nav .on{color:var(--ac);font-weight:800}
+.greet{padding:12px 16px 2px}
+.greet .g1{font-size:19px;font-weight:800}
+.greet .g2{font-size:11px;color:var(--sub);margin-top:3px}
+.chips{display:flex;gap:7px;padding:11px 16px}
+.chip{flex:1;border-radius:13px;padding:9px;color:#fff}
+.chip .cn{font-size:11.5px;font-weight:700}
+.chip .cv{font-size:14px;font-weight:800;margin-top:2px}
+.cbar{height:4px;border-radius:2px;background:rgba(255,255,255,.35);margin-top:5px;overflow:hidden}
+.cbar div{height:100%;background:#fff;border-radius:2px}
+.ctask{margin:0 16px 7px;background:var(--card);border-radius:11px;padding:10px 11px;border-left:4px solid var(--cc);box-shadow:0 1px 2px rgba(10,15,30,.05);display:flex;gap:9px;align-items:center}
+.mhd{display:flex;justify-content:space-between;align-items:center;padding:7px 16px;font-weight:800;font-size:14px}
+.wrow,.dgrid{display:grid;grid-template-columns:repeat(7,1fr);padding:0 11px}
+.wrow span{text-align:center;font-size:9.5px;color:var(--sub);padding:3px 0}
+.dgrid{row-gap:3px}
+.dgrid span{height:31px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;border-radius:9px}
+.dgrid .sel{background:var(--ac);color:#fff;font-weight:800}
+.dot{width:4px;height:4px;border-radius:50%;background:var(--ac);margin-top:2px}
+.dgrid .sel .dot{background:#fff}
+.daylist{margin:8px 16px 0;background:var(--card);border-radius:12px;padding:9px 11px}
+.dlt{font-size:11.5px;font-weight:800;margin-bottom:2px}
+.crs{display:flex;gap:7px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.crs:last-child{border:0}
+.cb{width:7px;height:24px;border-radius:4px;flex:none}
+.crs .ci{flex:1}
+.crs b{display:block;font-size:12px}
+.crs i{font-style:normal;font-size:9.5px;color:var(--sub)}
+.weekhd{padding:5px 16px 0;font-size:10.5px;color:var(--sub)}
+.ttgrid{flex:1;display:grid;grid-template-columns:28px repeat(7,1fr);grid-template-rows:20px repeat(5,1fr);gap:3px;padding:5px 7px 0}
+.ttgrid .th{font-size:9px;color:var(--sub);text-align:center;padding:2px 0}
+.ttgrid .tn{font-size:8px;color:var(--sub);display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.35}
+.cblk{border-radius:6px;padding:3px 4px;font-size:8px;color:#fff;line-height:1.3;overflow:hidden}
+.cblk b{font-size:8.5px;display:block}
+.importTip{margin:7px 16px;background:var(--soft);color:var(--ac);border-radius:9px;padding:7px 9px;font-size:9.5px;line-height:1.5}
+.stat1{margin:9px 16px 0;background:var(--card);border-radius:14px;padding:13px;display:flex;gap:13px;align-items:center}
+.ring{width:70px;height:70px;border-radius:50%;background:conic-gradient(var(--ac) 0 78%,var(--line) 78% 100%);display:flex;align-items:center;justify-content:center;flex:none}
+.ring div{width:53px;height:53px;border-radius:50%;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring b{font-size:14px}
+.ring i{font-style:normal;font-size:8px;color:var(--sub)}
+.stat1 .r1{font-size:13px;font-weight:800}
+.stat1 .r2{font-size:10px;color:var(--sub);margin-top:3px;line-height:1.6}
+.streak{margin:9px 16px 0;background:linear-gradient(120deg,#ff8a4c,#ff5470);border-radius:14px;color:#fff;padding:11px 13px;display:flex;justify-content:space-between;align-items:center}
+.streak b{font-size:15px}
+.streak i{font-style:normal;font-size:10px;opacity:.9;display:block;margin-top:2px}
+.streak .em{font-size:24px}
+.bars{margin:9px 16px;background:var(--card);border-radius:14px;padding:11px 13px}
+.bars .bt{font-size:11px;font-weight:700;margin-bottom:7px}
+.brow{display:flex;gap:6px;align-items:flex-end;height:60px}
+.bcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.bcol div{width:70%;border-radius:4px 4px 2px 2px;background:var(--ac);opacity:.9}
+.bcol span{font-size:8px;color:var(--sub)}
+.dim{position:absolute;inset:0;background:rgba(10,14,22,.55)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:18px 18px 0 0;padding:13px 16px 18px}
+.sh-h{font-size:14px;font-weight:800;margin-bottom:9px}
+.inp{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:11.5px;color:var(--sub);margin-bottom:9px}
+.lbl{font-size:10px;color:var(--sub);margin:2px 0 5px}
+.chips2{display:flex;gap:6px;margin-bottom:9px}
+.chips2 span{font-size:10.5px;padding:5px 11px;border-radius:99px;background:var(--bg);border:1px solid var(--line);color:var(--sub)}
+.chips2 .on{background:var(--soft);border-color:var(--ac);color:var(--ac);font-weight:700}
+.row2{display:flex;gap:7px;margin-bottom:9px}
+.row2 .inp{flex:1;margin:0}
+.btns{display:flex;gap:9px;margin-top:2px}
+.btns div{flex:1;text-align:center;padding:10px;border-radius:11px;font-size:12.5px;font-weight:700}
+.ghost{background:var(--bg);color:var(--sub)}
+.prim{background:var(--ac);color:#fff}
+.list{margin:7px 16px;background:var(--card);border-radius:12px;overflow:hidden}
+.li{display:flex;justify-content:space-between;align-items:center;padding:12px 13px;border-bottom:1px solid var(--line);font-size:12.5px}
+.li:last-child{border:0}
+.li .l2{font-size:10px;color:var(--sub);margin-top:2px}
+.tgl{width:36px;height:20px;border-radius:99px;background:var(--ac);position:relative}
+.tgl:after{content:"";position:absolute;right:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff}
+.ar{color:var(--sub);font-size:12px}
+.note{background:#222834;border:1px solid #2e3644;border-radius:10px;padding:9px 12px;font-size:12px;color:#aab2c0;line-height:1.7;margin-top:14px;max-width:640px}
+.note b{color:#e7eaf0}
+</style></head>
+<body>
+<h1>📅 计划表 App — UI 设计提案（8 屏）</h1>
+<div class="sub">技术：手机网页 PWA（Vue3+Vite）· 数据存手机本地 · 下方为今日页两种风格候选 + 公共页面 · 2026-09-12</div>
+<div class="note"><b>① 桌面小组件：</b>PWA 受系统限制做不了真正的桌面小组件。替代：添加到主屏幕 + 长按图标快捷方式直达“今日待办”；必须要真小组件的话二期打包 Android APK。</div>
+<div class="note"><b>② 喜鹊儿导入：</b>喜鹊儿没有公开接口、本地应用读不到它的账号数据。方案：手动添加课程 + 粘贴课表文本自动解析（失败可手改）。</div>
+<div class="stack">
+
+<div class="cell"><div class="cap"><b>A · 清新简约（浅色）</b> · 今日页</div>
+<div class="frame light">
+<div class="sbar"><span>9:41</span><span>●●● 🔋</span></div>
+<div class="hd"><div><div class="hdate">9月12日 周六</div><div class="hsub">今天有 5 个计划 · 已完成 2</div></div><div class="hava">⚙</div></div>
+<div class="pwrap"><div class="pbar"><div class="pfill" style="width:40%"></div></div><div class="psub">今日进度 2/5</div></div>
+<div class="sec">工作</div>
+<div class="task"><span class="ck"></span><div class="tt"><b>写周报</b><i>09:00 · 提前 10 分钟提醒</i></div><span class="tag">高</span></div>
+<div class="task"><span class="ck"></span><div class="tt"><b>团队例会</b><i>10:30 · 会议室 3</i></div></div>
+<div class="sec">学习</div>
+<div class="task done"><span class="ck on">✓</span><div class="tt"><b>背单词 30 个</b><i>08:00 · 已完成</i></div></div>
+<div class="task"><span class="ck"></span><div class="tt"><b>阅读《算法图解》</b><i>21:30</i></div></div>
+<div class="sec">生活</div>
+<div class="task"><span class="ck"></span><div class="tt"><b>健身 1 小时</b><i>19:00</i></div><span class="tag">高</span></div>
+<div class="fab">＋</div>
+<div class="nav"><span class="on">今日</span><span>日历</span><span>统计</span><span>我的</span></div>
+</div></div>
+
+<div class="cell"><div class="cap"><b>A · 清新简约（深色）</b> · 跟随系统切换</div>
+<div class="frame dark">
+<div class="sbar"><span>9:41</span><span>●●● 🔋</span></div>
+<div class="hd"><div><div class="hdate">9月12日 周六</div><div class="hsub">今天有 5 个计划 · 已完成 2</div></div><div class="hava">⚙</div></div>
+<div class="pwrap"><div class="pbar"><div class="pfill" style="width:40%"></div></div><div class="psub">今日进度 2/5</div></div>
+<div class="sec">工作</div>
+<div class="task"><span class="ck"></span><div class="tt"><b>写周报</b><i>09:00 · 提前 10 分钟提醒</i></div><span class="tag">高</span></div>
+<div class="task"><span class="ck"></span><div class="tt"><b>团队例会</b><i>10:30 · 会议室 3</i></div></div>
+<div class="sec">学习</div>
+<div class="task done"><span class="ck on">✓</span><div class="tt"><b>背单词 30 个</b><i>08:00 · 已完成</i></div></div>
+<div class="task"><span class="ck"></span><div class="tt"><b>阅读《算法图解》</b><i>21:30</i></div></div>
+<div class="sec">生活</div>
+<div class="task"><span class="ck"></span><div class="tt"><b>健身 1 小时</b><i>19:00</i></div><span class="tag">高</span></div>
+<div class="fab">＋</div>
+<div class="nav"><span class="on">今日</span><span>日历</span><span>统计</span><span>我的</span></div>
+</div></div>
+
+<div class="cell"><div class="cap"><b>B · 彩色卡片风</b> · 今日页（备选）</div>
+<div class="frame light">
+<div class="sbar"><span>9:41</span><span>●●● 🔋</span></div>
+<div class="greet"><div class="g1">早上好 👋</div><div class="g2">今天 5 个计划 · 已完成 2</div></div>
+<div class="chips">
+<div class="chip" style="background:#3b82f6"><div class="cn">工作</div><div class="cv">2/3</div><div class="cbar"><div style="width:66%"></div></div></div>
+<div class="chip" style="background:#10b981"><div class="cn">学习</div><div class="cv">1/2</div><div class="cbar"><div style="width:50%"></div></div></div>
+<div class="chip" style="background:#f59e0b"><div class="cn">生活</div><div class="cv">0/1</div><div class="cbar"><div style="width:8%"></div></div></div>
+</div>
+<div class="ctask" style="--cc:#3b82f6"><span class="ck"></span><div class="tt"><b>写周报</b><i>09:00 · 工作 · 高优先</i></div></div>
+<div class="ctask" style="--cc:#10b981"><span class="ck on">✓</span><div class="tt"><b>背单词 30 个</b><i>08:00 · 学习 · 已完成</i></div></div>
+<div class="ctask" style="--cc:#f59e0b"><span class="ck"></span><div class="tt"><b>健身 1 小时</b><i>19:00 · 生活</i></div></div>
+<div class="ctask" style="--cc:#8b5cf6"><span class="ck"></span><div class="tt"><b>阅读《算法图解》</b><i>21:30 · 自定义</i></div></div>
+<div class="fab">＋</div>
+<div class="nav"><span class="on">今日</span><span>日历</span><span>统计</span><span>我的</span></div>
+</div></div>
+
+<div class="cell"><div class="cap"><b>日历 · 月视图</b>（课程并入每天）</div>
+<div class="frame light">
+<div class="sbar"><span>9:41</span><span>●●● 🔋</span></div>
+<div class="mhd"><span>‹</span><span>2026年9月</span><span>›</span></div>
+<div class="wrow"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+<div class="dgrid"><span></span><span></span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8<span class="dot"></span></span><span>9</span><span>10<span class="dot"></span></span><span>11<span class="dot"></span></span><span class="sel">12<span class="dot"></span></span><span>13</span><span>14</span><span>15<span class="dot"></span></span><span>16</span><span>17<span class="dot"></span></span><span>18</span><span>19<span class="dot"></span></span><span>20</span><span>21</span><span>22</span><span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span><span>30</span><span></span><span></span><span></span></div>
+<div class="daylist">
+<div class="dlt">9月12日 周六 · 4 项</div>
+<div class="crs"><span class="cb" style="background:#3b82f6"></span><div class="ci"><b>写周报</b><i>09:00 · 计划</i></div></div>
+<div class="crs"><span class="cb" style="background:#10b981"></span><div class="ci"><b>高等数学</b><i>08:00-09:40 · 教一 A101 · 课程</i></div></div>
+<div class="crs"><span class="cb" style="background:#8b5cf6"></span><div class="ci"><b>数据结构</b><i>10:00-11:40 · 教三 C305 · 课程</i></div></div>
+<div class="crs"><span class="cb" style="background:#f59e0b"></span><div class="ci"><b>健身 1 小时</b><i>19:00 · 计划</i></div></div>
+</div>
+<div class="nav"><span>今日</span><span class="on">日历</span><span>统计</span><span>我的</span></div>
+</div></div>
+
+<div class="cell"><div class="cap"><b>课程表 · 周视图</b>（入口在日历页内）</div>
+<div class="frame light">
+<div class="sbar"><span>9:41</span><span>●●● 🔋</span></div>
+<div class="mhd"><span>‹</span><span>课程表</span><span>＋</span></div>
+<div class="weekhd">2026 秋季学期 · 第 2 周（9/7 - 9/13）</div>
+<div class="ttgrid">
+<div class="th"></div><div class="th">一</div><div class="th">二</div><div class="th">三</div><div class="th">四</div><div class="th">五</div><div class="th">六</div><div class="th">日</div>
+<div class="tn">1-2<br>08:00</div><div class="cblk" style="background:#3b82f6"><b>高等数学</b>A101</div><div class="cblk" style="background:#10b981"><b>大学英语</b>B202</div><div class="cblk" style="background:#8b5cf6"><b>数据结构</b>C305</div><div></div><div></div><div></div><div></div>
+<div class="tn">3-4<br>10:00</div><div></div><div></div><div></div><div class="cblk" style="background:#14b8a6"><b>概率论</b>D120</div><div class="cblk" style="background:#f59e0b"><b>体育</b>田径场</div><div></div><div></div>
+<div class="tn">5-6<br>14:00</div><div></div><div></div><div></div><div></div><div></div><div class="cblk" style="background:#64748b"><b>影视鉴赏</b>选修</div><div></div>
+<div class="tn">7-8<br>16:00</div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+<div class="tn">晚<br>19:00</div><div></div><div></div><div class="cblk" style="background:#ec4899"><b>社团活动</b>活动室</div><div></div><div></div><div></div><div></div>
+</div>
+<div class="importTip">💡 支持手动添加课程；也可把其他课表 App 的文本复制粘贴过来自动解析。</div>
+<div class="nav"><span>今日</span><span class="on">日历</span><span>统计</span><span>我的</span></div>
+</div></div>
+
+<div class="cell"><div class="cap"><b>统计面板</b></div>
+<div class="frame light">
+<div class="sbar"><span>9:41</span><span>●●● 🔋</span></div>
+<div class="mhd"><span></span><span>统计</span><span></span></div>
+<div class="stat1">
+<div class="ring"><div><b>78%</b><i>本周完成率</i></div></div>
+<div><div class="r1">已完成 32 项</div><div class="r2">未完成 9 项<br>比上周提升 12%</div></div>
+</div>
+<div class="streak"><div><b>🔥 连续打卡 6 天</b><i>创个人新高，继续保持</i></div><div class="em">🏆</div></div>
+<div class="bars"><div class="bt">近 7 天完成数</div><div class="brow">
+<div class="bcol"><div style="height:55%"></div><span>一</span></div>
+<div class="bcol"><div style="height:80%"></div><span>二</span></div>
+<div class="bcol"><div style="height:40%"></div><span>三</span></div>
+<div class="bcol"><div style="height:92%"></div><span>四</span></div>
+<div class="bcol"><div style="height:68%"></div><span>五</span></div>
+<div class="bcol"><div style="height:100%"></div><span>六</span></div>
+<div class="bcol"><div style="height:28%"></div><span>日</span></div>
+</div></div>
+<div class="nav"><span>今日</span><span>日历</span><span class="on">统计</span><span>我的</span></div>
+</div></div>
+
+<div class="cell"><div class="cap"><b>新建计划</b>（底部弹层）</div>
+<div class="frame light">
+<div class="sbar"><span>9:41</span><span>●●● 🔋</span></div>
+<div class="task"><span class="ck"></span><div class="tt"><b>写周报</b><i>09:00</i></div></div>
+<div class="task"><span class="ck"></span><div class="tt"><b>团队例会</b><i>10:30</i></div></div>
+<div class="dim"></div>
+<div class="sheet">
+<div class="sh-h">新建计划</div>
+<div class="inp">要做点什么？例如：写周报</div>
+<div class="lbl">分类</div>
+<div class="chips2"><span class="on">工作</span><span>学习</span><span>生活</span><span>＋ 自定义</span></div>
+<div class="lbl">时间 · 重复</div>
+<div class="row2"><div class="inp">9月12日 09:00</div><div class="inp">每周重复 ▾</div></div>
+<div class="lbl">优先级</div>
+<div class="chips2"><span>高</span><span class="on">中</span><span>低</span></div>
+<div class="btns"><div class="ghost">取消</div><div class="prim">保存</div></div>
+</div>
+</div></div>
+
+<div class="cell"><div class="cap"><b>我的</b>（设置）</div>
+<div class="frame light">
+<div class="sbar"><span>9:41</span><span>●●● 🔋</span></div>
+<div class="mhd"><span></span><span>我的</span><span></span></div>
+<div class="list">
+<div class="li"><div><div>深色模式</div><div class="l2">跟随系统自动切换</div></div><div class="tgl"></div></div>
+<div class="li"><div><div>分类管理</div><div class="l2">工作 · 学习 · 生活 · 自定义</div></div><span class="ar">›</span></div>
+<div class="li"><div><div>课程表</div><div class="l2">2026 秋季学期 · 6 门课</div></div><span class="ar">›</span></div>
+<div class="li"><div><div>提醒设置</div><div class="l2">默认提前 10 分钟</div></div><span class="ar">›</span></div>
+<div class="li"><div><div>数据导出 / 备份</div><div class="l2">本地数据，可导出为文件</div></div><span class="ar">›</span></div>
+<div class="li"><div><div>关于</div><div class="l2">v1.0.0</div></div><span class="ar">›</span></div>
+</div>
+<div class="nav"><span>今日</span><span>日历</span><span>统计</span><span class="on">我的</span></div>
+</div></div>
+
+</div>
+</body></html>

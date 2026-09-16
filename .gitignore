@@ -1,0 +1,11 @@
+node_modules/
+dist/
+dist.zip
+testapp.zip
+.edgeone/
+.mimosa/
+.zcode/
+.tef_dist/
+.env
+*.log
+.DS_Store
