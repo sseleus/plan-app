@@ -69,11 +69,13 @@ npm run icons      # 重新生成 PWA 图标（public/pwa-192.png、pwa-512.png�
 git push        # 推送到 GitHub 后，.github/workflows/deploy-pages.yml 自动构建并发布 dist/
 ```
 
-- 线上地址：`https://<用户名>.github.io/plan-app/`
+- 线上地址：`https://sseleus.github.io/plan-app/`
 - 构建用了 `base: './'` 相对路径（vite.config.js），所以放在任何子路径下都能跑，
   hash 路由不依赖服务器配置。
-- 国内访问 `github.io` 目前可用但偏慢（首屏 0.3~2.4s），且属"半通"状态；
+- 国内访问 `github.io` 实测可用且较快（站点资源 0.6~1.4s，2026-09 验证全 200）；
   好在是 PWA，**添加到主屏幕后走离线缓存，之后不再依赖网络**。
+- 注意：仓库首次部署时 Pages 需先开启一次（本仓库已开，来源为 GitHub Actions），
+  之后每次 `git push` 全自动。
 
 **备用入口：腾讯 EdgeOne Makers**（国内边缘节点，秒开；默认域名仅 3 小时预览链接，
 长期公开需绑定自有域名）。
