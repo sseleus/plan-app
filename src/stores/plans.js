@@ -2,8 +2,8 @@ import { reactive, watch } from 'vue'
 import { load, save, genId } from './storage.js'
 import { weekdayMon1 } from '../utils/date.js'
 
-// 计划：{ id, title, categoryId, date 'YYYY-MM-DD', time 'HH:mm'|'', priority 'high|mid|low',
-//         repeat 'none|daily|weekly|weekdays', remind bool, createdAt }
+// 计划：{ id, title, categoryId, date 'YYYY-MM-DD', time 'HH:mm'|''（开始）, end 'HH:mm'|''（结束，可空）,
+//         priority 'high|mid|low', repeat 'none|daily|weekly|weekdays', remind bool, createdAt }
 // 完成状态按「计划 × 日期」记录，重复计划每天独立打卡
 export const plansStore = reactive({
   ready: false,
@@ -20,7 +20,7 @@ export const plansStore = reactive({
   },
 
   add(data) {
-    this.plans.unshift({ id: genId(), createdAt: Date.now(), remind: false, time: '', ...data })
+    this.plans.unshift({ id: genId(), createdAt: Date.now(), remind: false, time: '', end: '', ...data })
   },
 
   update(id, data) {

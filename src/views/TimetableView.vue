@@ -1,12 +1,13 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { coursesStore, parseTimetableText, SLOT_TIMES, DAY_NAMES, COURSE_COLORS } from '../stores/courses'
-import { parseExcelTimetable } from '../utils/excelTimetable'
-import { settingsStore } from '../stores/settings'
+import { coursesStore, DAY_NAMES, COURSE_COLORS } from '../stores/courses'
+import { parseTimetableText, parseExcelTimetable } from '../utils/excelTimetable'
+import { settingsStore, slotTimes, slotShort, slotLabel } from '../stores/settings'
 import { todayStr, addDays } from '../utils/date'
 import CourseSheet from '../components/CourseSheet.vue'
 import AdjustSheet from '../components/AdjustSheet.vue'
+import SlotTimeSheet from '../components/SlotTimeSheet.vue'
 
 const router = useRouter()
 coursesStore.init()
@@ -20,6 +21,9 @@ const editingCourse = ref(null)
 const importShow = ref(false)
 const termShow = ref(false)
 const adjustShow = ref(false)
+const slotShow = ref(false)
+
+const slots = computed(() => slotTimes())
 
 const weekTitle = computed(() => {
   const mon = addDays(settingsStore.term.startDate, (week.value - 1) * 7)
@@ -61,8 +65,13 @@ const rows = computed(() =>
 )
 const importable = computed(() => rows.value.filter((r, i) => r.ok && checked[i] !== false))
 
+function parityCN(p) {
+  return p === 'odd' ? '单周' : p === 'even' ? '双周' : ''
+}
+
 function parsedLabel(r) {
-  return `${DAY_NAMES[r.dow - 1]} ${SLOT_TIMES[r.slotStart - 1].short}节 ${r.name}${r.classroom ? ' · ' + r.classroom : ''}`
+  const par = parityCN(r.parity)
+  return `${DAY_NAMES[r.dow - 1]} ${slotShort(r.slotStart - 1)}${r.slotEnd !== r.slotStart ? '~' + slotShort(r.slotEnd - 1) : ''}节 ${r.name}${r.classroom ? ' · ' + r.classroom : ''}${par ? ' · ' + par : ''}`
 }
 
 function pickExcel() {
@@ -94,7 +103,7 @@ function doImport() {
       name: r.name, dow: r.dow, slotStart: r.slotStart, slotEnd: r.slotEnd,
       classroom: r.classroom, teacher: r.teacher || '',
       color: COURSE_COLORS[coursesStore.courses.length % COURSE_COLORS.length],
-      weekStart: r.weekStart, weekEnd: r.weekEnd
+      weekStart: r.weekStart, weekEnd: r.weekEnd, parity: r.parity || 'all'
     })
     n++
   }
@@ -124,9 +133,9 @@ function adjLabel(a) {
   const c = coursesStore.courses.find(x => x.id === a.courseId)
   const name = c ? c.name : '（课程已删除）'
   if (a.kind === 'cancel') return `第 ${a.week} 周「${name}」取消一次`
-  const slots = SLOT_TIMES[a.slotStart - 1].label
-  if (a.kind === 'move') return `第 ${a.week} 周「${name}」调至 ${a.date} ${slots}`
-  return `${a.date} 补「${name}」${slots}`
+  const slotTxt = slotLabel(a.slotStart - 1)
+  if (a.kind === 'move') return `第 ${a.week} 周「${name}」调至 ${a.date} ${slotTxt}`
+  return `${a.date} 补「${name}」${slotTxt}`
 }
 function delAdjustment(a) {
   if (confirm('删除这条调整？课程会恢复原样。')) coursesStore.removeAdjustment(a.id)
@@ -153,9 +162,10 @@ function delAdjustment(a) {
         {{ d.replace('周', '') }}
       </div>
       <template v-for="(slotRows, si) in grid" :key="si">
-        <div class="tt-time">{{ SLOT_TIMES[si].short }}<br />{{ SLOT_TIMES[si].start }}</div>
+        <div class="tt-time">{{ slotShort(si) }}<br />{{ slots[si].start }}</div>
         <div v-for="(c, di) in slotRows" :key="di">
           <div v-if="c" class="course-block" :style="{ background: c.color }" @click="openEdit(c)">
+            <span v-if="c.parity === 'odd' || c.parity === 'even'" class="cb-parity">{{ c.parity === 'odd' ? '单' : '双' }}</span>
             <span class="cb-name">{{ (c._adjust === 'makeup' ? '补·' : c._adjust === 'move' ? '调·' : '') + c.name }}</span>
             <span class="cb-room">{{ c.classroom || c.teacher || '&nbsp;' }}</span>
           </div>
@@ -169,6 +179,9 @@ function delAdjustment(a) {
 
     <div class="row2 mt10">
       <button class="btn btn-ghost" @click="openTerm">学期设置</button>
+      <button class="btn btn-ghost" @click="slotShow = true">节次时间</button>
+    </div>
+    <div class="row2 mt10">
       <button class="btn btn-ghost" @click="adjustShow = true">调课 / 调休</button>
       <button class="btn btn-primary" @click="importShow = true">导入课表</button>
     </div>
@@ -185,6 +198,7 @@ function delAdjustment(a) {
 
     <CourseSheet v-model:show="sheetShow" :course="editingCourse" />
     <AdjustSheet v-model:show="adjustShow" />
+    <SlotTimeSheet v-model:show="slotShow" />
 
     <!-- 导入课表弹层 -->
     <template v-if="importShow">
@@ -199,19 +213,19 @@ function delAdjustment(a) {
 
         <template v-if="importMode === 'text'">
           <div class="imp-tip">
-            从其他课表 App 复制课表文本，每行一门课。如：「高等数学 周一 1-2节 A101」「大学英语 星期二 3-4节 B202 1-16周」。识别不了的行会标红。
+            每行一门课，如：「高等数学 周一 1-2节 A101」「大学英语 星期二 3-4节 B202 1-16周单周」。也支持直接粘贴整张课表（含星期表头的表格文本）。周次写成「2-17」或「2-17[1-2]」也能识别。
           </div>
           <textarea
             v-model="importText"
             class="inp"
             rows="6"
-            placeholder="每行一门课，例如：&#10;高等数学 周一 1-2节 教一A101&#10;大学英语 星期二 3-4节 B202 1-16周"
+            placeholder="每行一门课，例如：&#10;高等数学 周一 1-2节 教一A101&#10;大学英语 星期二 3-4节 B202 1-16周&#10;Java程序设计 周一 2-17[1-2] 数字经济实训大楼S403"
           ></textarea>
         </template>
 
         <template v-else>
           <div class="imp-tip">
-            选择课表 Excel 文件（.xlsx / .xls）。自动识别带「周一~周日」表头行和节次列的课表网格，课程格支持“课程名/教室/周次”混排，纵向合并的连堂课会自动合并。识别结果可在下方预览勾选。
+            选择课表 Excel 文件（.xlsx / .xls）。自动识别「周一~周日」表头行和节次列（支持中文数字节次、上午/下午/晚上分组、合并单元格），课程格支持“课程名/老师/周次/单双周/节次/教室”混排（如「2-17[1-2]」）。识别结果可在下方预览勾选。
           </div>
           <button class="btn btn-ghost" style="width: 100%" @click="pickExcel">
             {{ excelName ? `已选择：${excelName}` : '选择 Excel 文件' }}
@@ -224,7 +238,9 @@ function delAdjustment(a) {
             <span class="imp-mark" :class="r.ok ? 'ok' : 'bad'"></span>
             <div class="imp-raw">
               <div>{{ r.raw }}</div>
-              <div v-if="r.ok" class="imp-parsed">识别为：{{ parsedLabel(r) }}（{{ r.weekStart }}-{{ r.weekEnd }} 周）</div>
+              <div v-if="r.ok" class="imp-parsed">
+                识别为：{{ parsedLabel(r) }}（{{ r.weekStart }}-{{ r.weekEnd }} 周{{ parityCN(r.parity) ? ' · ' + parityCN(r.parity) : '' }}）
+              </div>
               <div v-else class="imp-bad-reason">识别失败：{{ r.reason }}</div>
             </div>
             <label v-if="r.ok"><input type="checkbox" :checked="checked[i] !== false" @change="checked[i] = $event.target.checked" /></label>

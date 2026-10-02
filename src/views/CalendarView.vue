@@ -2,9 +2,9 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { plansStore } from '../stores/plans'
-import { coursesStore, SLOT_TIMES } from '../stores/courses'
+import { coursesStore } from '../stores/courses'
 import { activitiesStore } from '../stores/activities.js'
-import { settingsStore } from '../stores/settings'
+import { settingsStore, slotTimes } from '../stores/settings'
 import { todayStr, fmtCN, weekCN, monthGrid, timeToMinutes } from '../utils/date'
 import PlanSheet from '../components/PlanSheet.vue'
 
@@ -46,24 +46,26 @@ function backToday() {
 // 某天的计划 + 课程，按时间排序
 const dayItems = computed(() => {
   const d = selected.value
+  const slots = slotTimes()
   const plans = plansStore.occurrencesOn(d).map(p => ({
     kind: 'plan', id: p.id, plan: p,
     title: p.title,
-    time: p.time || '全天',
+    time: p.time ? (p.end ? `${p.time}-${p.end}` : p.time) : '全天',
     order: timeToMinutes(p.time),
     color: settingsStore.catColor(p.categoryId),
     sub: p.time ? '计划' : '计划 · 全天'
   }))
   const courses = coursesStore.coursesOn(d).map(c => {
-    const slot = SLOT_TIMES[c.slotStart - 1]
+    const slot = slots[c.slotStart - 1] || slots[0]
     const mark = c._adjust === 'makeup' ? '补课 · ' : c._adjust === 'move' ? '调课 · ' : ''
+    const par = c.parity === 'odd' ? '单周' : c.parity === 'even' ? '双周' : ''
     return {
       kind: 'course', id: c.id, course: c,
       title: c.name,
       time: `${slot.start}-${slot.end}`,
       order: timeToMinutes(slot.start),
       color: c.color,
-      sub: `${mark}${slot.label} · ${c.classroom || '无教室'} · 课程`
+      sub: `${mark}${par ? par + ' · ' : ''}${slot.label || ''}${slot.label ? ' · ' : ''}${c.classroom || '无教室'} · 课程`
     }
   })
   const activities = activitiesStore.on(d).map(a => ({

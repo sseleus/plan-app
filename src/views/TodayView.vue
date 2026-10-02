@@ -45,7 +45,7 @@ const REPEAT_CN = { none: '', daily: '每天', weekly: '每周', weekdays: '工�
 
 function subOf(p) {
   const parts = []
-  if (p.time) parts.push(p.time)
+  if (p.time) parts.push(p.end ? `${p.time}-${p.end}` : p.time)
   if (REPEAT_CN[p.repeat]) parts.push(REPEAT_CN[p.repeat])
   if (p.remind && p.time) parts.push('🔔')
   return parts.join(' · ') || '全天'

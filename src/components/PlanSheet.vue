@@ -29,7 +29,7 @@ const PRIOS = [
 
 const mode = ref('plan')
 const form = reactive({
-  title: '', categoryId: '', date: '', time: '', repeat: 'none', priority: 'mid', remind: false
+  title: '', categoryId: '', date: '', time: '', end: '', repeat: 'none', priority: 'mid', remind: false
 })
 const actForm = reactive({
   title: '', date: '', start: '', end: '', place: '', color: '#ef4444', remind: true
@@ -42,6 +42,7 @@ function fillForms() {
     categoryId: p?.categoryId || settingsStore.categories[0]?.id || '',
     date: p?.date || props.presetDate || todayStr(),
     time: p?.time || '',
+    end: p?.end || '',
     repeat: p?.repeat || 'none',
     priority: p?.priority || 'mid',
     remind: !!p?.remind
@@ -75,7 +76,13 @@ function save() {
   if (mode.value === 'plan') {
     const title = form.title.trim()
     if (!title) return
-    const data = { ...form, title }
+    // 只填了结束时间没填开始时间时，把结束时间当作开始时间
+    let { time, end } = form
+    if (!time && end) {
+      time = end
+      end = ''
+    }
+    const data = { ...form, title, time, end }
     if (props.plan) plansStore.update(props.plan.id, data)
     else plansStore.add(data)
   } else {
@@ -116,10 +123,13 @@ function save() {
           </button>
         </div>
 
-        <div class="field-label">日期 · 时间</div>
+        <div class="field-label">日期</div>
+        <input v-model="form.date" class="inp" type="date" />
+
+        <div class="field-label">开始 · 结束时间（都可不填 = 全天）</div>
         <div class="row2">
-          <input v-model="form.date" class="inp" type="date" />
           <input v-model="form.time" class="inp" type="time" />
+          <input v-model="form.end" class="inp" type="time" />
         </div>
 
         <div class="field-label">重复</div>

@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, watch } from 'vue'
-import { coursesStore, SLOT_TIMES, DAY_NAMES } from '../stores/courses'
+import { coursesStore, DAY_NAMES } from '../stores/courses'
+import { slotCount, slotLabel } from '../stores/settings'
 import { todayStr } from '../utils/date'
 
 const props = defineProps({ show: Boolean })
@@ -94,11 +95,11 @@ function save() {
         <input v-model="form.date" class="inp" type="date" />
         <div class="field-label">节次</div>
         <div class="row2">
-          <select v-model.number="form.slotStart" class="inp">
-            <option v-for="s in 5" :key="s" :value="s">{{ SLOT_TIMES[s - 1].label }} 起</option>
+          <select v-model.number="form.slotStart" class="inp" @change="form.slotEnd < form.slotStart && (form.slotEnd = form.slotStart)">
+            <option v-for="s in slotCount()" :key="s" :value="s">{{ slotLabel(s - 1) }} 起</option>
           </select>
           <select v-model.number="form.slotEnd" class="inp">
-            <option v-for="s in 5" :key="s" :value="s" :disabled="s < form.slotStart">{{ SLOT_TIMES[s - 1].label }} 止</option>
+            <option v-for="s in slotCount()" :key="s" :value="s" :disabled="s < form.slotStart">{{ slotLabel(s - 1) }} 止</option>
           </select>
         </div>
       </template>

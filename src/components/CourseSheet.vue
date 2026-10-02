@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
-import { coursesStore, DAY_NAMES, COURSE_COLORS, SLOT_TIMES } from '../stores/courses.js'
+import { coursesStore, DAY_NAMES, COURSE_COLORS } from '../stores/courses.js'
+import { slotCount, slotLabel } from '../stores/settings.js'
 
 const props = defineProps({
   show: Boolean,
@@ -9,9 +10,15 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:show'])
 
+const PARITIES = [
+  { v: 'all', t: '每周都上' },
+  { v: 'odd', t: '单周' },
+  { v: 'even', t: '双周' }
+]
+
 const form = reactive({
   name: '', dow: 1, slotStart: 1, slotEnd: 2, classroom: '', teacher: '',
-  color: COURSE_COLORS[0], weekStart: 1, weekEnd: 30, allTerm: true,
+  color: COURSE_COLORS[0], weekStart: 1, weekEnd: 30, parity: 'all', allTerm: true,
   startDate: '', weeksCount: 4
 })
 const weekMode = ref('date') // date = 开始日期+持续几周；weeks = 直接填周次
@@ -32,11 +39,20 @@ watch(
       color: c?.color || COURSE_COLORS[coursesStore.courses.length % COURSE_COLORS.length],
       weekStart: c?.weekStart ?? 1,
       weekEnd: c?.weekEnd ?? 30,
+      parity: c?.parity || 'all',
       allTerm: c ? !custom : false,
       startDate: '',
       weeksCount: 4
     })
     weekMode.value = c ? 'weeks' : 'date' // 编辑已有课程直接改周次；新建默认按日期
+  }
+)
+
+// 节次起变化时节次止跟着钳制，避免出现止<起的隐形课程
+watch(
+  () => form.slotStart,
+  v => {
+    if (form.slotEnd < v) form.slotEnd = v
   }
 )
 
@@ -68,7 +84,7 @@ function save() {
   const data = {
     name, dow: form.dow, slotStart: form.slotStart, slotEnd: form.slotEnd,
     classroom: form.classroom, teacher: form.teacher, color: form.color,
-    weekStart, weekEnd
+    weekStart, weekEnd, parity: form.parity
   }
   if (props.course) coursesStore.update(props.course.id, data)
   else coursesStore.add(data)
@@ -101,10 +117,10 @@ function del() {
       <div class="field-label">节次</div>
       <div class="row2">
         <select v-model.number="form.slotStart" class="inp">
-          <option v-for="s in 5" :key="s" :value="s">{{ SLOT_TIMES[s - 1].label }} 起</option>
+          <option v-for="s in slotCount()" :key="s" :value="s">{{ slotLabel(s - 1) }} 起</option>
         </select>
         <select v-model.number="form.slotEnd" class="inp">
-          <option v-for="s in 5" :key="s" :value="s" :disabled="s < form.slotStart">{{ SLOT_TIMES[s - 1].label }} 止</option>
+          <option v-for="s in slotCount()" :key="s" :value="s" :disabled="s < form.slotStart">{{ slotLabel(s - 1) }} 止</option>
         </select>
       </div>
 
@@ -124,6 +140,19 @@ function del() {
           :style="{ background: c }"
           @click="form.color = c"
         ></button>
+      </div>
+
+      <div class="field-label">上课周次</div>
+      <div class="chip-row">
+        <button
+          v-for="p in PARITIES"
+          :key="p.v"
+          class="chip"
+          :class="{ on: form.parity === p.v }"
+          @click="form.parity = p.v"
+        >
+          {{ p.t }}
+        </button>
       </div>
 
       <div class="field-label">持续时段</div>
